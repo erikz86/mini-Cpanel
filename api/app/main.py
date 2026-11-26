@@ -1,4 +1,6 @@
 import logging
+import os
+import secrets
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -55,7 +57,15 @@ async def lifespan(app: FastAPI):
         if user_count == 0:
             logger.warning("No users found in database. Seeding default admin user...")
             default_username = "admin"
-            default_password = "cpaneladminpassword"
+            # Password admin TIDAK BOLEH di-hardcode: baca dari env var.
+            # Bila env tidak di-set, buat password acak sekali pakai dan
+            # tampilkan HANYA di log ini (jangan simpan di file/repo).
+            default_password = os.getenv("ADMIN_DEFAULT_PASSWORD")
+            generated = False
+            if not default_password:
+                alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                default_password = "".join(secrets.choice(alphabet) for _ in range(20))
+                generated = True
             
             hashed_password = get_password_hash(default_password)
             default_user = User(
@@ -65,6 +75,13 @@ async def lifespan(app: FastAPI):
             db.add(default_user)
             db.commit()
             logger.info(f"Default admin user created successfully. Username: {default_username}")
+            if generated:
+                logger.warning(
+                    "ADMIN_DEFAULT_PASSWORD tidak di-set — password admin acak dibuat. "
+                    "Password ini HANYA tampil sekali di log ini; catat lalu segera ganti lewat menu Users. "
+                    "Password admin: %s",
+                    default_password,
+                )
     except Exception as e:
         logger.error(f"Error seeding database: {e}")
     finally:
