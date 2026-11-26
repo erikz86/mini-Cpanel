@@ -83,6 +83,8 @@ graph TD
    uvicorn app.main:app --host 127.0.0.1 --port 8080 --reload
    ```
 
+> **Keamanan — kredensial admin:** saat database masih kosong, server membuat user `admin` pertama. Passwordnya dibaca dari env var `ADMIN_DEFAULT_PASSWORD`; bila tidak di-set, server membuat password acak 20 karakter dan menampilkannya **sekali** di log startup — catat lalu segera ganti lewat menu Users. Jangan pernah menulis password ke file atau repo. Kunci signing JWT juga wajib di-set lewat `CPANEL_SECRET_KEY` (tanpa itu, token login tidak berlaku setelah restart).
+
 ### 2. Set Up the Frontend Dashboard (`web`)
 1. Navigate to the frontend directory:
    ```bash
@@ -129,6 +131,7 @@ Restart=always
 
 # Environment Variables
 Environment="CPANEL_SECRET_KEY=your-production-secret-key"
+Environment="ADMIN_DEFAULT_PASSWORD=your-strong-admin-password"
 Environment="CPANEL_BACKEND_CORS_ORIGINS=https://cpanel.yourdomain.com"
 Environment="CPANEL_DATA_DIR=/home/yourusername/.minicpanel"
 Environment="CPANEL_APPS_DIR=/home/yourusername/apps"
